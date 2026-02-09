@@ -2,59 +2,131 @@
 <html>
 <head>
   <title>People Counting Dashboard</title>
-
-  <!-- Chart.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
-      font-family: Arial;
-      text-align: center;
+      font-family: "Segoe UI", Arial;
       background: #f4f6fc;
+      margin: 0;
+      padding: 0;
     }
 
     h1 {
-      color: darkblue;
-      margin-top: 20px;
+      text-align: center;
+      color: #1e3a8a;
+      margin: 20px 0;
     }
 
-    .card {
-      display: inline-block;
+    .top-actions {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
       padding: 20px;
-      margin: 15px;
-      width: 220px;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0px 0px 10px gray;
-      font-size: 18px;
+      flex-wrap: wrap;
     }
 
-    img {
-      margin-top: 20px;
-      border: 3px solid black;
+    .action-card {
+      background: white;
+      width: 300px;
+      padding: 20px;
       border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .action-card h3 {
+      color: #1e40af;
+      margin-bottom: 15px;
+    }
+
+    input {
+      padding: 8px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    .msg {
+      margin-top: 8px;
+      font-size: 14px;
+      color: green;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: #dbeafe;
+      margin: 20px;
+    }
+
+    .main {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      flex-wrap: wrap;
+    }
+
+    .left {
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .stat-card h2 {
+      color: #1e3a8a;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .right {
+      flex: 1;
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .right img {
+      width: 100%;
+      max-width: 850px;
+      border-radius: 15px;
+      border: 3px solid black;
     }
 
     canvas {
       margin-top: 30px;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0px 0px 10px gray;
-      padding: 15px;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      background: darkblue;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:hover {
-      background: green;
+      max-width: 850px;
     }
   </style>
 </head>
@@ -63,51 +135,97 @@
 
 <h1>People Counting & Density Dashboard</h1>
 
-<!-- ================= CARDS ================= -->
+<div class="top-actions">
 
-<div class="card">
-  <h2>People</h2>
-  <p id="people">0</p>
+  <!-- Upload Video -->
+  <div class="action-card">
+    <h3>Upload Video</h3>
+    <input type="file" id="videoFile" accept="video/mp4">
+    <button onclick="uploadVideo()">Upload Video</button>
+    <div class="msg" id="uploadMsg"></div>
+  </div>
+
+  <!-- Live Stream -->
+  <div class="action-card">
+    <h3>Live CCTV / IP Camera</h3>
+    <input type="text" id="liveLink" placeholder="Enter Live Stream URL">
+    <button onclick="startLive()">Start Live</button>
+    <div class="msg" id="liveMsg"></div>
+  </div>
+
+  <!-- Webcam -->
+  <div class="action-card">
+    <h3>Use Webcam</h3>
+    <button onclick="startWebcam()">Start Webcam</button>
+    <div class="msg" id="webcamMsg"></div>
+  </div>
+
 </div>
 
-<div class="card">
-  <h2>Density</h2>
-  <p id="density">0</p>
+<hr>
+
+<div class="main">
+
+  <div class="left">
+    <div class="stat-card">
+      <h2>People</h2>
+      <div class="stat-value" id="people">0</div>
+    </div>
+
+    <div class="stat-card">
+      <h2>Density</h2>
+      <div class="stat-value" id="density">0</div>
+    </div>
+
+    <div class="stat-card">
+      <h2>Crowd Level</h2>
+      <div class="stat-value" id="level">LOW</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <h2>Live Video Feed</h2>
+    <img src="/video">
+    <h2>Live People Count Graph</h2>
+    <canvas id="peopleChart"></canvas>
+  </div>
+
 </div>
-
-<div class="card">
-  <h2>Crowd Level</h2>
-  <p id="level">LOW</p>
-</div>
-
-<!-- ================= UPLOAD ================= -->
-
-<h2>Upload Video File</h2>
-
-<form action="/upload" method="POST" enctype="multipart/form-data">
-  <input type="file" name="video" accept="video/mp4">
-  <button type="submit">Upload Video</button>
-</form>
-
-<!-- ================= VIDEO ================= -->
-
-<h2>Live Video Feed</h2>
-<img src="/video" width="850">
-
-<!-- ================= GRAPH BELOW VIDEO ================= -->
-
-<h2>Live People Count Graph</h2>
-<canvas id="peopleChart" width="850" height="300"></canvas>
-
-<!-- ================= SCRIPT ================= -->
 
 <script>
+  function uploadVideo() {
+    const file = document.getElementById("videoFile").files[0];
+    const formData = new FormData();
+    formData.append("video", file);
+
+    fetch("/upload", { method: "POST", body: formData })
+      .then(res => res.text())
+      .then(msg => document.getElementById("uploadMsg").innerText = msg);
+  }
+
+  function startLive() {
+    const link = document.getElementById("liveLink").value;
+
+    fetch("/live", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "stream=" + encodeURIComponent(link)
+    })
+    .then(res => res.text())
+    .then(msg => document.getElementById("liveMsg").innerText = msg);
+  }
+
+  function startWebcam() {
+    fetch("/webcam")
+      .then(res => res.text())
+      .then(msg => document.getElementById("webcamMsg").innerText = msg);
+  }
+
+  // ===== Chart & Stats =====
   let labels = [];
   let peopleData = [];
 
-  // Create Chart
   const ctx = document.getElementById("peopleChart").getContext("2d");
-
   const peopleChart = new Chart(ctx, {
     type: "line",
     data: {
@@ -118,30 +236,20 @@
         borderWidth: 2,
         fill: false
       }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
     }
   });
 
-  // Update Stats + Graph
   async function updateStats() {
-    let response = await fetch("/stats");
-    let data = await response.json();
+    const res = await fetch("/stats");
+    const data = await res.json();
 
     document.getElementById("people").innerText = data.people;
-    document.getElementById("density").innerText = data.density + " people/m²";
+    document.getElementById("density").innerText = data.density + " p/m²";
     document.getElementById("level").innerText = data.level;
 
-    // Add graph point
-    let time = new Date().toLocaleTimeString();
-    labels.push(time);
+    labels.push(new Date().toLocaleTimeString());
     peopleData.push(data.people);
 
-    // Keep last 15 points only
     if (labels.length > 15) {
       labels.shift();
       peopleData.shift();
