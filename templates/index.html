@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>People Counting Dashboard</title>
+
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f4f6fc;
+    }
+
+    h1 {
+      color: darkblue;
+      margin-top: 20px;
+    }
+
+    .card {
+      display: inline-block;
+      padding: 20px;
+      margin: 15px;
+      width: 220px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0px 0px 10px gray;
+      font-size: 18px;
+    }
+
+    img {
+      margin-top: 20px;
+      border: 3px solid black;
+      border-radius: 15px;
+    }
+
+    canvas {
+      margin-top: 30px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0px 0px 10px gray;
+      padding: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: darkblue;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: green;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>People Counting & Density Dashboard</h1>
+
+<!-- ================= CARDS ================= -->
+
+<div class="card">
+  <h2>People</h2>
+  <p id="people">0</p>
+</div>
+
+<div class="card">
+  <h2>Density</h2>
+  <p id="density">0</p>
+</div>
+
+<div class="card">
+  <h2>Crowd Level</h2>
+  <p id="level">LOW</p>
+</div>
+
+<!-- ================= UPLOAD ================= -->
+
+<h2>Upload Video File</h2>
+
+<form action="/upload" method="POST" enctype="multipart/form-data">
+  <input type="file" name="video" accept="video/mp4">
+  <button type="submit">Upload Video</button>
+</form>
+
+<!-- ================= VIDEO ================= -->
+
+<h2>Live Video Feed</h2>
+<img src="/video" width="850">
+
+<!-- ================= GRAPH BELOW VIDEO ================= -->
+
+<h2>Live People Count Graph</h2>
+<canvas id="peopleChart" width="850" height="300"></canvas>
+
+<!-- ================= SCRIPT ================= -->
+
+<script>
+  let labels = [];
+  let peopleData = [];
+
+  // Create Chart
+  const ctx = document.getElementById("peopleChart").getContext("2d");
+
+  const peopleChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "People Count",
+        data: peopleData,
+        borderWidth: 2,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  // Update Stats + Graph
+  async function updateStats() {
+    let response = await fetch("/stats");
+    let data = await response.json();
+
+    document.getElementById("people").innerText = data.people;
+    document.getElementById("density").innerText = data.density + " people/m²";
+    document.getElementById("level").innerText = data.level;
+
+    // Add graph point
+    let time = new Date().toLocaleTimeString();
+    labels.push(time);
+    peopleData.push(data.people);
+
+    // Keep last 15 points only
+    if (labels.length > 15) {
+      labels.shift();
+      peopleData.shift();
+    }
+
+    peopleChart.update();
+  }
+
+  setInterval(updateStats, 1000);
+</script>
+
+</body>
+</html>
